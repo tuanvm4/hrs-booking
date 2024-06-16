@@ -3,6 +3,7 @@ package com.example.hotelbooking.service.impl;
 import com.example.hotelbooking.entity.BookingEntity;
 import com.example.hotelbooking.entity.RoomEntity;
 import com.example.hotelbooking.entity.UserEntity;
+import com.example.hotelbooking.enums.BookingStatus;
 import com.example.hotelbooking.exception.ResourceNotFoundException;
 import com.example.hotelbooking.exception.RoomUnavailableException;
 import com.example.hotelbooking.mapper.BookingMapper;
@@ -60,6 +61,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
+            booking.setBookingStatus(BookingStatus.CONFIRMED.name());
             BookingEntity bookingEntity = bookingRepository.save(booking);
             return bookingMapper.entityToModel(bookingEntity);
         } else {
