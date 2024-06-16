@@ -1,11 +1,15 @@
 package com.example.hotelbooking.service.impl;
 
 import com.example.hotelbooking.entity.BookingEntity;
+import com.example.hotelbooking.entity.RoomEntity;
+import com.example.hotelbooking.entity.UserEntity;
 import com.example.hotelbooking.exception.ResourceNotFoundException;
 import com.example.hotelbooking.exception.RoomUnavailableException;
 import com.example.hotelbooking.mapper.BookingMapper;
 import com.example.hotelbooking.model.Booking;
 import com.example.hotelbooking.repository.BookingRepository;
+import com.example.hotelbooking.repository.RoomRepository;
+import com.example.hotelbooking.repository.UserRepository;
 import com.example.hotelbooking.service.BookingService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,14 +24,17 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
     private final BookingMapper bookingMapper;
 
     @Override
-    public List<Booking> getAllBookings() {
-        var bookingEntities =  bookingRepository.findAll();
-        return bookingMapper.entitiesToModels(bookingEntities);
+    public List<Booking> getBookingsByUserId(Long userId) {
+        List<BookingEntity> bookingEntities = bookingRepository.findByUserId(userId);
+        return bookingEntities.stream()
+                .map(bookingMapper::entityToModel)
+                .toList();
     }
-
     @Override
     public Booking getBookingById(Long bookingId) {
         Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
@@ -37,6 +44,21 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     public Booking createBooking(BookingEntity booking) {
+        // Check if the user exists
+        Optional<UserEntity> userOptional = userRepository.findById(booking.getUserId());
+        if (userOptional.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with id " + booking.getUserId());
+        }
+        // Check if the room exists
+        Optional<RoomEntity> roomOptional = roomRepository.findById(booking.getRoomId());
+        if (roomOptional.isEmpty()) {
+            throw new ResourceNotFoundException("Room not found with id " + booking.getRoomId());
+        }
+        // Handle data valid
+        if (booking.getCheckInDate().isAfter(booking.getCheckOutDate())) {
+            throw new RoomUnavailableException("Check-in date must be before check-out date");
+        }
+
         if (isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
             BookingEntity bookingEntity = bookingRepository.save(booking);
             return bookingMapper.entityToModel(bookingEntity);

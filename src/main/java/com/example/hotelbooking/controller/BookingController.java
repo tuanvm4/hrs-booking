@@ -1,6 +1,7 @@
 package com.example.hotelbooking.controller;
 
-import com.example.hotelbooking.entity.BookingEntity;
+import com.example.hotelbooking.exception.ResourceNotFoundException;
+import com.example.hotelbooking.exception.RoomUnavailableException;
 import com.example.hotelbooking.mapper.BookingMapper;
 import com.example.hotelbooking.model.Booking;
 import com.example.hotelbooking.service.impl.BookingServiceImpl;
@@ -26,9 +27,9 @@ public class BookingController {
     private final BookingServiceImpl bookingService;
     private final BookingMapper bookingMapper;
 
-    @GetMapping
-    public ResponseEntity<List<Booking>> getAllBookings() {
-        List<Booking> bookings = bookingService.getAllBookings();
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Booking>> getBookingsByUserId(@PathVariable Long userId) {
+        List<Booking> bookings = bookingService.getBookingsByUserId(userId);
         return ResponseEntity.ok(bookings);
     }
 
@@ -43,9 +44,17 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
-        Booking createdBooking = bookingService.createBooking(bookingMapper.modelToEntity(booking));
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdBooking);
+    public ResponseEntity<?> createBooking(@RequestBody Booking booking) {
+        try {
+            Booking createdBooking = bookingService.createBooking(bookingMapper.modelToEntity(booking));
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdBooking);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RoomUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+        }
     }
 
     @PutMapping("/{bookingId}")
