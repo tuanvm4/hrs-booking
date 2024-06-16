@@ -7,6 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.security.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -18,7 +19,4 @@ public class Room {
     private String roomType;
     private BigDecimal pricePerNight;
     private Boolean isAvailable;
-    private Timestamp createdAt;
-    private Timestamp modifiedAt;
-
 }

@@ -12,6 +12,7 @@ import com.example.hotelbooking.repository.BookingRepository;
 import com.example.hotelbooking.repository.RoomRepository;
 import com.example.hotelbooking.repository.UserRepository;
 import com.example.hotelbooking.service.BookingService;
+import com.example.hotelbooking.ultilities.DateValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     public Booking createBooking(BookingEntity booking) {
+        DateValidator.validateCheckInBeforeCheckOut(booking.getCheckInDate(), booking.getCheckOutDate());
         // Check if the user exists
         Optional<UserEntity> userOptional = userRepository.findById(booking.getUserId());
         if (userOptional.isEmpty()) {
@@ -54,10 +56,6 @@ public class BookingServiceImpl implements BookingService {
         Optional<RoomEntity> roomOptional = roomRepository.findById(booking.getRoomId());
         if (roomOptional.isEmpty()) {
             throw new ResourceNotFoundException("Room not found with id " + booking.getRoomId());
-        }
-        // Handle data valid
-        if (booking.getCheckInDate().isAfter(booking.getCheckOutDate())) {
-            throw new RoomUnavailableException("Check-in date must be before check-out date");
         }
 
         if (isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
