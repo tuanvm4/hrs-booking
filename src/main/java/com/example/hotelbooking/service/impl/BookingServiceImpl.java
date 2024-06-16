@@ -3,6 +3,8 @@ package com.example.hotelbooking.service.impl;
 import com.example.hotelbooking.entity.BookingEntity;
 import com.example.hotelbooking.exception.ResourceNotFoundException;
 import com.example.hotelbooking.exception.RoomUnavailableException;
+import com.example.hotelbooking.mapper.BookingMapper;
+import com.example.hotelbooking.model.Booking;
 import com.example.hotelbooking.repository.BookingRepository;
 import com.example.hotelbooking.service.BookingService;
 import lombok.AllArgsConstructor;
@@ -18,22 +20,26 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final BookingMapper bookingMapper;
 
     @Override
-    public List<BookingEntity> getAllBookings() {
-        return bookingRepository.findAll();
+    public List<Booking> getAllBookings() {
+        var bookingEntities =  bookingRepository.findAll();
+        return bookingMapper.entitiesToModels(bookingEntities);
     }
 
     @Override
-    public BookingEntity getBookingById(Long bookingId) {
+    public Booking getBookingById(Long bookingId) {
         Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
-        return optionalBooking.orElseThrow(() -> new ResourceNotFoundException("Booking not found with id " + bookingId));
+        BookingEntity bookingEntity  = optionalBooking.orElseThrow(() -> new ResourceNotFoundException("Booking not found with id " + bookingId));
+        return bookingMapper.entityToModel(bookingEntity);
     }
 
     @Transactional
-    public BookingEntity createBooking(BookingEntity booking) {
+    public Booking createBooking(BookingEntity booking) {
         if (isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
-            return bookingRepository.save(booking);
+            BookingEntity bookingEntity = bookingRepository.save(booking);
+            return bookingMapper.entityToModel(bookingEntity);
         } else {
             throw new RoomUnavailableException("Room is already booked for the selected time frame.");
         }
@@ -45,7 +51,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingEntity updateBooking(Long bookingId, BookingEntity booking) {
+    public Booking updateBooking(Long bookingId, BookingEntity booking) {
         Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isPresent()) {
             BookingEntity existingBooking = optionalBooking.get();
@@ -54,7 +60,8 @@ public class BookingServiceImpl implements BookingService {
             existingBooking.setCheckInDate(booking.getCheckInDate());
             existingBooking.setCheckOutDate(booking.getCheckOutDate());
             existingBooking.setBookingStatus(booking.getBookingStatus());
-            return bookingRepository.save(existingBooking);
+            var bookingEntity = bookingRepository.save(existingBooking);
+            return bookingMapper.entityToModel(bookingEntity);
         } else {
             throw new ResourceNotFoundException("Booking not found with id " + bookingId);
         }

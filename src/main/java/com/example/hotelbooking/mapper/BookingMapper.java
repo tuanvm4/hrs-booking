@@ -7,6 +7,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
 
@@ -14,4 +16,8 @@ public interface BookingMapper {
 
     @Mapping(target = "bookingId", ignore = true)
     BookingEntity modelToEntity(Booking model);
+
+    List<Booking> entitiesToModels(List<BookingEntity> entities);
+
+    List<BookingEntity> modelsToEntities(List<Booking> models);
 }

@@ -7,13 +7,13 @@ import java.util.List;
 
 public interface BookingService {
 
-    List<BookingEntity> getAllBookings();
+    List<Booking> getAllBookings();
 
-    BookingEntity getBookingById(Long bookingId);
+    Booking getBookingById(Long bookingId);
 
-    BookingEntity createBooking(BookingEntity booking);
+    Booking createBooking(BookingEntity booking);
 
-    BookingEntity updateBooking(Long bookingId, BookingEntity booking);
+    Booking updateBooking(Long bookingId, BookingEntity booking);
 
     void deleteBooking(Long bookingId);
 }
