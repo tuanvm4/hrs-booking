@@ -38,13 +38,6 @@ public class BookingServiceImpl implements BookingService {
                 .toList();
     }
 
-    @Override
-    public Booking getBookingById(Long bookingId) {
-        Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
-        BookingEntity bookingEntity = optionalBooking.orElseThrow(() -> new ResourceNotFoundException("Booking not found with id " + bookingId));
-        return bookingMapper.entityToModel(bookingEntity);
-    }
-
     @Transactional
     public Booking createBooking(BookingEntity booking) {
         DateValidator.validateCheckInBeforeCheckOut(booking.getCheckInDate(), booking.getCheckOutDate());
@@ -96,7 +89,6 @@ public class BookingServiceImpl implements BookingService {
                 var bookingEntity = bookingRepository.save(existingBooking);
                 return bookingMapper.entityToModel(bookingEntity);
             }
-
         }
 
         throw new ResourceNotFoundException("Booking not found with id " + bookingId);
@@ -105,15 +97,5 @@ public class BookingServiceImpl implements BookingService {
     private boolean isRoomAvailable(Long bookingId, Long roomId, LocalDate checkIn, LocalDate checkOut) {
         List<BookingEntity> overlappingBookings = bookingRepository.findOverlappingBookingsExcludeCurrentBooking(bookingId, roomId, checkIn, checkOut);
         return overlappingBookings.isEmpty();
-    }
-
-    @Override
-    public void deleteBooking(Long bookingId) {
-        Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
-        if (optionalBooking.isPresent()) {
-            bookingRepository.delete(optionalBooking.get());
-        } else {
-            throw new ResourceNotFoundException("Booking not found with id " + bookingId);
-        }
     }
 }

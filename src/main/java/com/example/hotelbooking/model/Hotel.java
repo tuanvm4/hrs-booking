@@ -19,7 +19,4 @@ public class Hotel {
     private String zipCode;
     private String phoneNumber;
     private String email;
-    private Timestamp createdAt;
-    private Timestamp modifiedAt;
-
 }

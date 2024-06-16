@@ -8,7 +8,6 @@ import com.example.hotelbooking.service.impl.BookingServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,16 +30,6 @@ public class BookingController {
     public ResponseEntity<List<Booking>> getBookingsByUserId(@PathVariable Long userId) {
         List<Booking> bookings = bookingService.getBookingsByUserId(userId);
         return ResponseEntity.ok(bookings);
-    }
-
-    @GetMapping("/{bookingId}")
-    public ResponseEntity<Booking> getBookingById(@PathVariable Long bookingId) {
-        Booking booking = bookingService.getBookingById(bookingId);
-        if (booking != null) {
-            return ResponseEntity.ok(booking);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
     }
 
     @PostMapping
@@ -67,11 +56,5 @@ public class BookingController {
         } catch (RoomUnavailableException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-    }
-
-    @DeleteMapping("/{bookingId}")
-    public ResponseEntity<Void> deleteBooking(@PathVariable Long bookingId) {
-        bookingService.deleteBooking(bookingId);
-        return ResponseEntity.noContent().build();
     }
 }

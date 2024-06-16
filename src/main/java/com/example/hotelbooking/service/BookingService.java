@@ -9,11 +9,7 @@ public interface BookingService {
 
     List<Booking> getBookingsByUserId(Long userId);
 
-    Booking getBookingById(Long bookingId);
-
     Booking createBooking(BookingEntity booking);
 
     Booking updateBooking(Long bookingId, BookingEntity booking);
-
-    void deleteBooking(Long bookingId);
 }
