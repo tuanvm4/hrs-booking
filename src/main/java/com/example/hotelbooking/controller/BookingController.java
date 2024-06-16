@@ -58,12 +58,14 @@ public class BookingController {
     }
 
     @PutMapping("/{bookingId}")
-    public ResponseEntity<Booking> updateBooking(@PathVariable Long bookingId, @RequestBody Booking booking) {
-        var updatedBooking = bookingService.updateBooking(bookingId, bookingMapper.modelToEntity(booking));
-        if (updatedBooking != null) {
-            return ResponseEntity.ok(updatedBooking);
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> updateBooking(@PathVariable Long bookingId, @RequestBody Booking booking) {
+        try {
+            var updatedBooking = bookingService.updateBooking(bookingId, bookingMapper.modelToEntity(booking));
+            return ResponseEntity.status(HttpStatus.OK).body(updatedBooking);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RoomUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

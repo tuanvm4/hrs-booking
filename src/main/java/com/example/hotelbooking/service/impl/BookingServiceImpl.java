@@ -37,10 +37,11 @@ public class BookingServiceImpl implements BookingService {
                 .map(bookingMapper::entityToModel)
                 .toList();
     }
+
     @Override
     public Booking getBookingById(Long bookingId) {
         Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
-        BookingEntity bookingEntity  = optionalBooking.orElseThrow(() -> new ResourceNotFoundException("Booking not found with id " + bookingId));
+        BookingEntity bookingEntity = optionalBooking.orElseThrow(() -> new ResourceNotFoundException("Booking not found with id " + bookingId));
         return bookingMapper.entityToModel(bookingEntity);
     }
 
@@ -74,19 +75,36 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking updateBooking(Long bookingId, BookingEntity booking) {
+        DateValidator.validateCheckInBeforeCheckOut(booking.getCheckInDate(), booking.getCheckOutDate());
         Optional<BookingEntity> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isPresent()) {
-            BookingEntity existingBooking = optionalBooking.get();
-            existingBooking.setUserId(booking.getUserId());
-            existingBooking.setRoomId(booking.getRoomId());
-            existingBooking.setCheckInDate(booking.getCheckInDate());
-            existingBooking.setCheckOutDate(booking.getCheckOutDate());
-            existingBooking.setBookingStatus(booking.getBookingStatus());
-            var bookingEntity = bookingRepository.save(existingBooking);
-            return bookingMapper.entityToModel(bookingEntity);
-        } else {
-            throw new ResourceNotFoundException("Booking not found with id " + bookingId);
+            if (BookingStatus.CANCELLED.name().equals(booking.getBookingStatus())) {
+                BookingEntity existingBooking = optionalBooking.get();
+                existingBooking.setBookingStatus(booking.getBookingStatus());
+                var bookingEntity = bookingRepository.save(existingBooking);
+                return bookingMapper.entityToModel(bookingEntity);
+            } else if (BookingStatus.CONFIRMED.name().equals(booking.getBookingStatus())) {
+                if (!isRoomAvailable(bookingId, booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
+                    throw new RoomUnavailableException("Room is already booked for the selected time frame.");
+                }
+                BookingEntity existingBooking = optionalBooking.get();
+                existingBooking.setUserId(booking.getUserId());
+                existingBooking.setRoomId(booking.getRoomId());
+                existingBooking.setCheckInDate(booking.getCheckInDate());
+                existingBooking.setCheckOutDate(booking.getCheckOutDate());
+                existingBooking.setBookingStatus(booking.getBookingStatus());
+                var bookingEntity = bookingRepository.save(existingBooking);
+                return bookingMapper.entityToModel(bookingEntity);
+            }
+
         }
+
+        throw new ResourceNotFoundException("Booking not found with id " + bookingId);
+    }
+
+    private boolean isRoomAvailable(Long bookingId, Long roomId, LocalDate checkIn, LocalDate checkOut) {
+        List<BookingEntity> overlappingBookings = bookingRepository.findOverlappingBookingsExcludeCurrentBooking(bookingId, roomId, checkIn, checkOut);
+        return overlappingBookings.isEmpty();
     }
 
     @Override

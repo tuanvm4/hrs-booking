@@ -12,7 +12,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 
 @Entity
@@ -41,10 +40,4 @@ public class BookingEntity {
     @Basic
     @Column(name = "booking_status")
     private String bookingStatus;
-    @Basic
-    @Column(name = "created_at")
-    private Timestamp createdAt;
-    @Basic
-    @Column(name = "modified_at")
-    private Timestamp modifiedAt;
 }
