@@ -17,7 +17,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,18 +51,15 @@ public class BookingServiceImpl implements BookingService {
             throw new ResourceNotFoundException("Room not found with id " + booking.getRoomId());
         }
 
-        if (isRoomAvailable(booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
+        List<BookingEntity> overlappingBookings = bookingRepository.findOverlappingBookings(booking.getRoomId(),booking.getCheckInDate(), booking.getCheckOutDate());
+
+        if (overlappingBookings.isEmpty()) {
             booking.setBookingStatus(BookingStatus.CONFIRMED.name());
             BookingEntity bookingEntity = bookingRepository.save(booking);
             return bookingMapper.entityToModel(bookingEntity);
         } else {
             throw new RoomUnavailableException("Room is already booked for the selected time frame.");
         }
-    }
-
-    private boolean isRoomAvailable(Long roomId, LocalDate checkIn, LocalDate checkOut) {
-        List<BookingEntity> overlappingBookings = bookingRepository.findOverlappingBookings(roomId, checkIn, checkOut);
-        return overlappingBookings.isEmpty();
     }
 
     @Override
@@ -77,7 +73,9 @@ public class BookingServiceImpl implements BookingService {
                 var bookingEntity = bookingRepository.save(existingBooking);
                 return bookingMapper.entityToModel(bookingEntity);
             } else if (BookingStatus.CONFIRMED.name().equals(booking.getBookingStatus())) {
-                if (!isRoomAvailable(bookingId, booking.getRoomId(), booking.getCheckInDate(), booking.getCheckOutDate())) {
+                List<BookingEntity> overlappingBookings = bookingRepository.findOverlappingBookings(booking.getRoomId(),booking.getCheckInDate(), booking.getCheckOutDate());
+
+                if (overlappingBookings.isEmpty()) {
                     throw new RoomUnavailableException("Room is already booked for the selected time frame.");
                 }
                 BookingEntity existingBooking = optionalBooking.get();
@@ -93,9 +91,5 @@ public class BookingServiceImpl implements BookingService {
 
         throw new ResourceNotFoundException("Booking not found with id " + bookingId);
     }
-
-    private boolean isRoomAvailable(Long bookingId, Long roomId, LocalDate checkIn, LocalDate checkOut) {
-        List<BookingEntity> overlappingBookings = bookingRepository.findOverlappingBookingsExcludeCurrentBooking(bookingId, roomId, checkIn, checkOut);
-        return overlappingBookings.isEmpty();
-    }
 }
+
